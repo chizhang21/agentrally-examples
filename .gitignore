@@ -1,0 +1,15 @@
+.DS_Store
+.idea/
+.vscode/
+.cache/
+.work/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.kubeconfig
+*.kubeconfig.*
+*.private.yaml
+*.local.yaml
+secrets/

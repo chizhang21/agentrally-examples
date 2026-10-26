@@ -1,0 +1,45 @@
+# Build images/codex-mobile/Containerfile from the repository root, then replace the image address.
+apiVersion: arally.io/v1alpha1
+kind: AgentDefinition
+metadata:
+  name: codex-mobile
+  namespace: agentrally-codex-mobile
+spec:
+  agentGroupRef:
+    name: codex-mobile
+  template: coding
+  security:
+    profile: Restricted
+    runAsUser: 1000
+  container:
+    image: registry.example.com/agents/codex-mobile:dev
+    command: [/bin/sh, -ec]
+    args:
+    - |
+      mkdir -p /workspace/projects
+      exec codexapp /workspace/projects --port 5900 --password "$CODEX_MOBILE_PASSWORD" --no-open --no-tunnel --no-login
+    env:
+    - name: CODEX_MOBILE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: developer-password
+          key: password
+    ports:
+    - name: http
+      containerPort: 5900
+    startupProbe:
+      tcpSocket:
+        port: http
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 60
+    readinessProbe:
+      tcpSocket:
+        port: http
+      periodSeconds: 5
+      timeoutSeconds: 5
+    livenessProbe:
+      tcpSocket:
+        port: http
+      periodSeconds: 30
+      timeoutSeconds: 5
