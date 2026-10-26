@@ -1,5 +1,7 @@
 # HTTP API Agent
 
+Run the commands below from the repository root.
+
 A generic agent serving HTTP on port 8000, with model credentials, an external tool API
 key and an API authentication token supplied through a Secret.
 
@@ -11,8 +13,8 @@ Copy the Secret templates into the ignored `secrets/` directory before adding re
 
 ```sh
 mkdir -p secrets
-cp gitops/http-api-agent/02-agent-secret.yaml secrets/http-api-agent-credentials.yaml
-cp gitops/http-api-agent/03-registry-secret.yaml secrets/http-api-agent-registry.yaml
+cp operator/http-api-agent/02-agent-secret.yaml secrets/http-api-agent-credentials.yaml
+cp operator/http-api-agent/03-registry-secret.yaml secrets/http-api-agent-registry.yaml
 ```
 
 Fill in those private copies, including registry settings matching the image.
@@ -29,15 +31,8 @@ If the Gateway proxy runs in a different namespace, update the Group's NetworkPo
 selector as well.
 
 ```sh
-kubectl apply -f gitops/http-api-agent/01-group.yaml
-kubectl wait agentgroup/http-api-agent --for=condition=Ready --timeout=120s
-kubectl apply -f secrets/http-api-agent-credentials.yaml
-kubectl apply -f secrets/http-api-agent-registry.yaml
-kubectl apply -f gitops/http-api-agent/04-agent-definition.yaml
-kubectl -n agentrally-http-api-agent wait agentdefinition/http-api-agent --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/http-api-agent/04-agent.yaml
-kubectl -n agentrally-http-api-agent wait agentinstance/http-api-agent --for=condition=Ready --timeout=5m
-kubectl -n agentrally-http-api-agent wait agentinstance/http-api-agent --for=condition=InteractionReady --timeout=5m
+kubectl apply -f operator/http-api-agent/01-group.yaml && kubectl wait agentgroup/http-api-agent --for=condition=Ready --timeout=120s
+kubectl apply -f secrets/http-api-agent-credentials.yaml -f secrets/http-api-agent-registry.yaml -f operator/http-api-agent/04-agent-definition.yaml -f operator/http-api-agent/04-agent.yaml && kubectl -n agentrally-http-api-agent wait agentinstance/http-api-agent --for=condition=InteractionReady --timeout=5m
 kubectl -n agentrally-http-api-agent get agentinstance http-api-agent -o jsonpath='{.status.interaction.url}{"\n"}'
 ```
 

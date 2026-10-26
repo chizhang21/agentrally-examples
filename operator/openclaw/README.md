@@ -1,5 +1,7 @@
 # Resident OpenClaw assistant
 
+Run the commands below from the repository root.
+
 This AgentDefinition references Alice's gateway Secret; its AgentInstance binds Alice's
 retained PVC.
 
@@ -31,15 +33,10 @@ Install agent-sandbox Core and Extensions before the Operator.
 Then:
 
 ```sh
-kubectl apply -f gitops/openclaw/group.yaml
-kubectl wait agentgroup/openclaw --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/openclaw/workspace.yaml
+kubectl apply -f operator/openclaw/group.yaml && kubectl wait agentgroup/openclaw --for=condition=Ready --timeout=120s
 # Supply a private token file; do not commit it.
 kubectl -n agentrally-openclaw create secret generic alice-gateway --from-file=token=/path/to/token
-kubectl apply -f gitops/openclaw/definition.yaml
-kubectl -n agentrally-openclaw wait agentdefinition/openclaw --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/openclaw/instance.yaml
-kubectl -n agentrally-openclaw wait agentinstance/alice --for=condition=Ready --timeout=5m
+kubectl apply -f operator/openclaw/workspace.yaml -f operator/openclaw/definition.yaml -f operator/openclaw/instance.yaml
 ```
 
 On an empty workspace, the startup command writes a minimal local Gateway config with
@@ -57,21 +54,16 @@ Kubernetes readiness does not establish successful channel login or model calls.
 
 ## Upgrade and retain state
 
-Change the image in the definition and apply it.
-Existing instances stay on their accepted revision.
-Set a new `spec.restartToken` in [instance.yaml](instance.yaml) to adopt the latest
-published revision.
-For example, change the token to `upgrade-1` before applying the instance:
+Update the image in [definition.yaml](definition.yaml) and set a new
+`spec.restartToken` in [instance.yaml](instance.yaml).
+Existing instances stay on their accepted revision until explicit replacement.
+For example, use `upgrade-1` as the token and apply both files:
 
 ```sh
-kubectl apply -f gitops/openclaw/definition.yaml
-kubectl -n agentrally-openclaw wait agentdefinition/openclaw --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/openclaw/instance.yaml
+kubectl apply -f operator/openclaw/definition.yaml -f operator/openclaw/instance.yaml
 ```
 
 Use a unique token for each restart.
-When a GitOps controller owns the deployment, change these manifests in Git
-and let it reconcile them in the same readiness order.
 When a GitOps controller owns the deployment, change these manifests in Git
 and let it reconcile them in the same readiness order.
 
@@ -105,7 +97,7 @@ From an AgentRally Operator source checkout:
 
 ```sh
 E2E_OPENCLAW=true \
-E2E_OPENCLAW_DIR=/path/to/agentrally-examples/gitops/openclaw \
+E2E_OPENCLAW_DIR=/path/to/agentrally-examples/operator/openclaw \
 E2E_TEST='^TestOpenClawLifecycle$' make e2e
 ```
 

@@ -1,4 +1,4 @@
-# Build images/codex-mobile/Containerfile from the repository root, then replace the image address.
+# Build operator/codex-mobile/image/Containerfile from the repository root, then replace the image address.
 apiVersion: arally.io/v1alpha1
 kind: AgentDefinition
 metadata:

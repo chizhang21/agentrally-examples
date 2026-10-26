@@ -1,72 +1,85 @@
 # AgentRally Operator examples
 
-These examples demonstrate the Operator's CRs and Kubernetes resource references.
-Complete application deployments are listed in the [repository index](../README.md).
-Run the commands below from this repository's root.
+Complete Agent deployments for
+[AgentRally Operator](https://github.com/chizhang21/agentrally-operator).
 
-Install [Core, Extensions and AgentRally](https://github.com/chizhang21/agentrally-operator/blob/main/docs/installation.md) first.
-Replace image names and other placeholders before applying a file.
+Each application directory contains its deployment manifests and instructions.
+Application-specific image recipes live alongside those manifests.
+Run the commands below from the repository root.
 
-Follow the [minimal deployment sequence](https://github.com/chizhang21/agentrally-operator/blob/main/docs/usage.md) to create a Group and wait
-for its namespace, publish its AgentDefinition, then create AgentInstances.
+Basic CRs, configuration references and deployer RBAC are documented in the
+[Operator repository](https://github.com/chizhang21/agentrally-operator/blob/main/examples/README.md).
 
-## Minimal deployment
+## Prerequisites
 
-Replace the placeholder image in [base/definition.yaml](base/definition.yaml).
-Then create the Group, wait for its namespace and publish the definition:
+Install AgentRally Operator and agent-sandbox Core and Extensions first.
+See the [Operator installation guide](https://github.com/chizhang21/agentrally-operator/blob/main/docs/installation.md).
 
-```sh
-kubectl apply -f operator/base/group.yaml
-kubectl wait agentgroup/demo --for=condition=Ready --timeout=120s
-kubectl apply -f operator/base/definition.yaml
-kubectl -n agentrally-demo wait agentdefinition/demo-agent --for=condition=Ready --timeout=120s
-kubectl apply -f operator/base/agent.yaml
-kubectl -n agentrally-demo wait agentinstance/demo-agent --for=condition=Ready --timeout=5m
-```
+The manifests use the `arally.io/v1alpha1` API provided by Operator `v0.0.2`.
+Adjust image addresses, storage and ingress settings for your cluster.
+Application setup and model authentication remain part of each project.
 
-## Configuration examples
+Apply one project at a time.
 
-Apply the definition listed for an example before creating its instance.
-The minimal and retained-workspace examples use [base/definition.yaml](base/definition.yaml).
+## Deployment order
 
-| File | Use | Prerequisites |
+1. Apply the AgentGroup and wait for `Ready`.
+   The Operator creates its dedicated namespace.
+2. Prepare Secrets and any external PVC in that namespace.
+3. Apply the AgentDefinition and AgentInstance.
+
+Keep actual credentials outside versioned files.
+The Secret manifests in the HTTP project contain placeholders only.
+Use ignored `secrets/` files or your existing secret manager for real values.
+
+## Application examples
+
+| Project | Environment | State |
 | --- | --- | --- |
-| [base/group.yaml](base/group.yaml) | Group, quota and optional HTTPRoute defaults | Administrator permissions |
-| [base/definition.yaml](base/definition.yaml) | Minimal reusable generic definition | Your image |
-| [base/agent.yaml](base/agent.yaml) | Minimal generic agent | Your image |
-| [group-policy.yaml](group-policy.yaml) | LimitRange, allocation pause and declarative prewarming | Administrator permissions; applications safe to start before allocation |
-| [snapshot-workspace-definition.yaml](snapshot-workspace-definition.yaml) / [snapshot-workspace.yaml](snapshot-workspace.yaml) | Private workspace initialized from a snapshot | Ready namespaced VolumeSnapshot, snapshot controller and compatible CSI StorageClass |
-| [retained-workspace.yaml](retained-workspace.yaml) | External PVC retained across instance replacement | Base Group and definition; filesystem StorageClass |
-| [cluster-capabilities.yaml](cluster-capabilities.yaml) | Administrator classifications for custom runtime/storage classes | Existing native classes and administrator permissions |
-| [full-definition.yaml](full-definition.yaml) / [full.yaml](full.yaml) | Built-in configuration and instance field references | Secrets, ConfigMap, RuntimeClass, ServiceAccount, pull credentials, filesystem StorageClass and Gateway |
-| [custom-template.yaml](custom-template.yaml) / [custom-definition.yaml](custom-definition.yaml) / [custom.yaml](custom.yaml) | Native SandboxTemplate reference | Apply template, then definition, then instance |
-| [httproute-definition.yaml](httproute-definition.yaml) / [httproute.yaml](httproute.yaml) | HTTP endpoint through Gateway API | Image serving port 8080; Group defaults or a unique eligible Gateway with a wildcard domain |
-| [rbac/editor.yaml](rbac/editor.yaml) | Namespace-scoped deployer access | Administrator applies the [RoleBinding](rbac/README.md) |
+| [Codex Mobile](codex-mobile/README.md) | Coding agent with a web UI and terminal | External PVC for projects and login state |
+| [OpenClaw](openclaw/README.md) | Resident personal assistant | External PVC for configuration, credentials and workspace |
+| [HTTP API Agent](http-api-agent/README.md) | Your HTTP agent image | Ephemeral by default; optional Sandbox-owned PVC |
 
-Apply one instance example at a time.
-The base and HTTPRoute examples use the same name; do not apply the directory
-recursively.
+The Codex Mobile [image recipe and build checks](codex-mobile/image/README.md) live with
+its deployment example.
+A manual GitHub Actions workflow can build and publish that image.
 
-`full.yaml` is a field reference, not a ready-to-run deployment.
+## Lifecycle and GitOps
 
-Select assistant or coding on AgentDefinition with `spec.template`; see
-[environment settings](https://github.com/chizhang21/agentrally-operator/blob/main/docs/agent-templates.md).
-AgentRally creates pools automatically.
+The YAML manifests in each application directory declare its desired deployment.
+Select the configured manifests for one application as the GitOps source.
+Exclude the HTTP Secret templates from automatic reconciliation.
+Provide those Secrets through your chosen secret manager.
+Keep image sources and build checks outside the deployment scan.
+Configure dependency ordering and readiness checks so Group namespace creation finishes
+before namespaced resources are applied.
+The directory layout alone does not provide that ordering.
 
-It also creates `ClusterCapabilities/cluster`; use the optional report example only to
-declare administrator mappings.
-Read it with `kubectl get clustercapabilities cluster -o yaml`.
-`status.capabilities` groups the discovered configuration into isolation, storage and
-networking capabilities while retaining the native resource references.
-Status is generated by the controller; do not add it to an apply manifest.
-See [capability evidence and classifications](https://github.com/chizhang21/agentrally-operator/blob/main/docs/cluster-capabilities.md).
+AgentInstances run by default.
+Add `spec.operatingMode: Suspended` to pause one; remove that field to resume.
+Change the manifest in Git when a GitOps controller owns the resource.
 
-For an endpoint, declare the Agent's HTTP port and set `interaction.type`.
-HTTPRoute uses Group defaults or Gateway discovery.
-See [interaction setup](https://github.com/chizhang21/agentrally-operator/blob/main/docs/usage.md#interaction-endpoint).
+Changing a definition publishes a new revision.
+Existing instances retain their accepted revision, including through suspend/resume.
+Apply the updated definition, then change the instance's `spec.restartToken` to
+adopt that revision.
+Pin images by digest when reproducible execution matters.
+
+Delete an instance and wait for execution cleanup before deleting its definition.
+Retain external PVCs and their Groups when keeping workspace data.
+Configure GitOps pruning accordingly.
+
+## Validate manifests
 
 The Operator repository provides CRD schema, CEL, field-pruning and reference checks.
-Run them with this checkout selected as described in
-[manifest validation](../README.md#validate-manifests).
-Its default `make check` remains independent of this examples repository.
+From a checkout of its matching source, include these application manifests:
+
+```sh
+AGENTRALLY_EXAMPLES_DIR=/path/to/agentrally-examples/operator \
+go test ./tests/packaging -run 'AdmissionAndPruning|ReferencesResolveWithinTheSameGroup'
+```
+
+Default Operator checks validate its own CR examples and do not require this checkout.
 Images, credentials, Gateways and storage dependencies still need to match your cluster.
+The opt-in OpenClaw lifecycle test is documented in the
+[OpenClaw example](openclaw/README.md#run-the-openclaw-test).

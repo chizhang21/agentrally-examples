@@ -52,7 +52,7 @@ jobs:
           CODEX_VERSION: ${{ inputs.codex_version }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          python3 images/codex-mobile/validate-build-inputs.py
+          python3 operator/codex-mobile/image/validate-build-inputs.py
       - name: Check registry credentials
         env:
           REGISTRY: ${{ steps.identity.outputs.registry }}
@@ -71,8 +71,8 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: images/codex-mobile
-          file: images/codex-mobile/Containerfile
+          context: operator/codex-mobile/image
+          file: operator/codex-mobile/image/Containerfile
           platforms: linux/amd64
           load: true
           push: false
@@ -91,7 +91,7 @@ jobs:
         env:
           IMAGE: ${{ steps.identity.outputs.image }}
         run: |
-          docker run --rm -i --network none --entrypoint node "$IMAGE" < images/codex-mobile/check-terminal.cjs
+          docker run --rm -i --network none --entrypoint node "$IMAGE" < operator/codex-mobile/image/check-terminal.cjs
       - name: Check CLI and password-protected web server
         env:
           IMAGE: ${{ steps.identity.outputs.image }}
@@ -103,7 +103,7 @@ jobs:
             "$IMAGE" --port 5900 --password smoke-test-only --no-open --no-tunnel --no-login)
           trap 'docker rm -f "$container" >/dev/null' EXIT
           for ((attempt = 1; attempt <= 30; attempt++)); do
-            if docker exec -i "$container" node < images/codex-mobile/check-web.cjs; then
+            if docker exec -i "$container" node < operator/codex-mobile/image/check-web.cjs; then
               echo 'Codex CLI and authenticated web UI checks passed.'
               exit 0
             fi

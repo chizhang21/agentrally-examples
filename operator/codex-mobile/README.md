@@ -1,7 +1,7 @@
 # Codex Mobile agent
 
 A password-protected coding agent with a retained workspace.
-Build the image using the [Codex Mobile image recipe](../../images/codex-mobile/README.md).
+Build the image using the [Codex Mobile image recipe](image/README.md).
 Run the commands below from the repository root.
 
 ## Deploy
@@ -19,15 +19,10 @@ Set `storageClassName` in [workspace.yaml](workspace.yaml) if another class is n
 From the repository root:
 
 ```sh
-kubectl apply -f gitops/codex-mobile/group.yaml
-kubectl wait agentgroup/codex-mobile --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/codex-mobile/workspace.yaml
+kubectl apply -f operator/codex-mobile/group.yaml && kubectl wait agentgroup/codex-mobile --for=condition=Ready --timeout=120s
 # Supply a private password file; do not commit it.
 kubectl -n agentrally-codex-mobile create secret generic developer-password --from-file=password=/path/to/password
-kubectl apply -f gitops/codex-mobile/definition.yaml
-kubectl -n agentrally-codex-mobile wait agentdefinition/codex-mobile --for=condition=Ready --timeout=120s
-kubectl apply -f gitops/codex-mobile/instance.yaml
-kubectl -n agentrally-codex-mobile wait agentinstance/developer --for=condition=Ready --timeout=5m
+kubectl apply -f operator/codex-mobile/workspace.yaml -f operator/codex-mobile/definition.yaml -f operator/codex-mobile/instance.yaml && kubectl -n agentrally-codex-mobile wait agentinstance/developer --for=condition=Ready --timeout=5m
 ```
 
 The instance mounts the retained `developer-state` PVC at `/workspace`.
@@ -51,13 +46,13 @@ shown in the [Operator usage guide](https://github.com/chizhang21/agentrally-ope
 
 ## Suspend, resume and upgrade
 
-Change `operatingMode` in [instance.yaml](instance.yaml) to `Suspended` and apply it.
-Set it back to `Running` to resume.
+Add `spec.operatingMode: Suspended` to [instance.yaml](instance.yaml) and apply it.
+Remove that field and apply again to resume.
 The external PVC keeps projects and login state across both suspension and execution replacement.
 
-To upgrade, update the image in [definition.yaml](definition.yaml) and apply it.
-Wait for the definition to be Ready, then set a new `spec.restartToken` in
-[instance.yaml](instance.yaml) and apply that file.
+To upgrade, update the image in [definition.yaml](definition.yaml) and set a new
+`spec.restartToken` in [instance.yaml](instance.yaml).
+Apply the definition and instance in that order.
 Existing instances keep their accepted revision until explicit replacement.
 Back up workspace data before application upgrades.
 

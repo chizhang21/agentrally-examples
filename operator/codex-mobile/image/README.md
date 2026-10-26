@@ -4,7 +4,7 @@ Builds [friuns2/codex-mobile](https://github.com/friuns2/codex-mobile) from its
 published `@brutalstrikedevs/codexapp` npm package, together with Codex CLI.
 This application image is built independently of the Operator image.
 
-Deploy it with the [GitOps manifests](../../gitops/codex-mobile/README.md).
+Deploy it with the [GitOps manifests](../README.md).
 
 ## Build in GitHub Actions
 
@@ -72,7 +72,7 @@ Codex Mobile retains its MIT license, and Codex CLI its Apache-2.0 license.
 From the repository root:
 
 ```sh
-docker build --platform linux/amd64 -f images/codex-mobile/Containerfile -t registry.example.com/agents/codex-mobile:dev images/codex-mobile
+docker build --platform linux/amd64 -f operator/codex-mobile/image/Containerfile -t registry.example.com/agents/codex-mobile:dev operator/codex-mobile/image
 docker push registry.example.com/agents/codex-mobile:dev
 ```
 
@@ -83,5 +83,5 @@ The workflow uses [input validation](validate-build-inputs.py), a
 [terminal check](check-terminal.cjs) and a [web login check](check-web.cjs).
 The Node checks run inside the built image; they can be passed to `node` through
 standard input for local diagnosis.
-See the [workflow](../../.github/workflows/codex-mobile.yml) for the container setup and
+See the [workflow](../../../.github/workflows/codex-mobile.yml) for the container setup and
 environment.

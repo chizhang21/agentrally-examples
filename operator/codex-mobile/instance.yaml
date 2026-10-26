@@ -8,7 +8,6 @@ spec:
     name: codex-mobile
   definitionRef:
     name: codex-mobile
-  operatingMode: Running
   workspace:
     existingClaimRef:
       name: developer-state

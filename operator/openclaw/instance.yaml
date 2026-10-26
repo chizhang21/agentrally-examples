@@ -13,4 +13,3 @@ spec:
     existingClaimRef:
       name: alice-state
     mountPath: /workspace
-  operatingMode: Running

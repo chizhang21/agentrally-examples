@@ -8,7 +8,6 @@ spec:
     name: http-api-agent
   definitionRef:
     name: http-api-agent
-  operatingMode: Running
   interaction:
     type: HTTPRoute
   # For persistence during the Sandbox lifetime, uncomment the workspace.
