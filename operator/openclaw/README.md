@@ -93,27 +93,25 @@ or wake it on demand.
 
 ## Run the OpenClaw test
 
-From an AgentRally Operator source checkout:
+Use a disposable kind cluster with AgentRally Operator, agent-sandbox Core/Extensions
+and a default filesystem StorageClass already installed.
+See the Operator's [installation guide](https://github.com/chizhang21/agentrally-operator/blob/main/docs/installation.md).
+The cluster nodes must be able to pull the image selected in this example.
+
+From this repository root:
 
 ```sh
-E2E_OPENCLAW=true \
-E2E_OPENCLAW_DIR=/path/to/agentrally-examples/operator/openclaw \
-E2E_TEST='^TestOpenClawLifecycle$' make e2e
+python3 operator/openclaw/test.py --kubeconfig /path/to/disposable-kind-kubeconfig
 ```
 
-The driver builds the current Operator, pulls the image selected in this example, and
-creates a disposable kind cluster with real agent-sandbox Core/Extensions.
-It uses a generated gateway token and deletes the cluster afterward.
-No existing cluster is modified and no image is published.
+The test requires Python 3 and kubectl.
+It rejects non-kind contexts and creates a uniquely named temporary Group and namespace.
+It uses the manifests in this directory and generates a temporary gateway token.
+It deletes its test resources afterward; the caller owns cluster setup and teardown.
 
-The test starts this actual OpenClaw image, checks HTTP probes and authenticated health
-RPC, and creates a disabled scheduler job through OpenClaw's CLI.
-It checks the same job ID, application config and retained files after suspend/resume
+The test checks HTTP probes, authenticated health RPC and a disabled scheduler job.
+It verifies retained files, config, scheduler state and PVC identity after suspend/resume
 and explicit execution replacement.
+It also checks revision pinning, zero workspace spares and PVC retention after Instance deletion.
 
-It also checks revision pinning, zero workspace spares and PVC retention after deleting
-the instance.
-The replacement changes configuration while keeping the OpenClaw image version fixed.
-
-This profile uses kind's default container runtime and filesystem storage.
 It does not test Kata, external channels, provider onboarding or live model inference.
