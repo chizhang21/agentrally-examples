@@ -1,4 +1,3 @@
-# Reusable configuration. Apply before its AgentInstance.
 apiVersion: arally.io/v1alpha1
 kind: AgentDefinition
 metadata:
@@ -9,40 +8,28 @@ spec:
     name: http-api-agent
   template: generic
   container:
-    image: registry.example.com/http-api-agent:replace-me
+    image: ghcr.io/chizhang21/agentrally-demo-agent:v0.0.3
     imagePullPolicy: IfNotPresent
     resources:
-      requests:
-        cpu: 500m
-        memory: 1Gi
-      limits:
-        cpu: "1"
-        memory: 2Gi
-    imagePullSecrets:
-    - name: http-api-agent-registry
-    env:
-    - name: DATABASE
-      value: data/agent.sqlite
-    - name: MODEL_NAME
-      value: REPLACE_WITH_MODEL_NAME
-    - name: MODEL_BASE_URL
-      value: https://models.example.com/v1
-    - name: MODEL_API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: http-api-agent-credentials
-          key: MODEL_API_KEY
-    - name: TOOL_API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: http-api-agent-credentials
-          key: TOOL_API_KEY
-    - name: API_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: http-api-agent-credentials
-          key: API_TOKEN
+      requests: {cpu: 100m, memory: 128Mi}
+      limits: {cpu: 500m, memory: 512Mi}
     ports:
     - name: http
-      containerPort: 8000
-      protocol: TCP
+      containerPort: 8080
+    startupProbe:
+      httpGet: {path: /healthz, port: http}
+      periodSeconds: 2
+      failureThreshold: 60
+    readinessProbe:
+      httpGet: {path: /healthz, port: http}
+      periodSeconds: 5
+    # Real model mode also requires the API_TOKEN from the same Secret.
+    # env:
+    # - name: API_TOKEN
+    #   valueFrom:
+    #     secretKeyRef: {name: http-api-agent-credentials, key: API_TOKEN}
+  # Optional: create the Secret and configure your provider before enabling.
+  # modelProvider:
+  #   baseURL: https://models.example.com/v1
+  #   model: your-model
+  #   apiKeySecretRef: {name: http-api-agent-credentials, key: OPENAI_API_KEY}

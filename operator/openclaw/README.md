@@ -54,14 +54,13 @@ Kubernetes readiness does not establish successful channel login or model calls.
 
 ## Upgrade and retain state
 
-Update the image in [definition.yaml](definition.yaml) and set a new
-`spec.restartToken` in [instance.yaml](instance.yaml).
-Existing instances stay on their accepted revision until explicit replacement.
-For example, use `upgrade-1` as the token and apply both files:
-
-```sh
-kubectl apply -f operator/openclaw/definition.yaml -f operator/openclaw/instance.yaml
-```
+Update the image and apply [definition.yaml](definition.yaml).
+Wait for the Definition's current-generation `Ready` condition, then read
+`status.currentRevision`.
+Set `spec.revision` to that hash and change `spec.restartToken` in
+[instance.yaml](instance.yaml), then apply it.
+For example, use `upgrade-1` as the token.
+A restart without a revision change retains the accepted configuration.
 
 Use a unique token for each restart.
 When a GitOps controller owns the deployment, change these manifests in Git

@@ -1,0 +1,10 @@
+FROM python:3.13-slim@sha256:2d44738ebf4ce5f63b9d9ea871e9c7cfdc0426f7b0c97cac915fd88ded1d86bb
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY operator/http-api-agent/image/requirements.txt ./
+RUN pip install --no-cache-dir --require-hashes -r requirements.txt
+COPY operator/http-api-agent/image/app.py ./
+COPY LICENSE /licenses/agentrally-demo-agent/LICENSE
+USER 65532:65532
+EXPOSE 8080
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--no-access-log", "--timeout-graceful-shutdown", "20"]

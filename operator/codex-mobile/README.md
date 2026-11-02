@@ -50,10 +50,12 @@ Add `spec.operatingMode: Suspended` to [instance.yaml](instance.yaml) and apply 
 Remove that field and apply again to resume.
 The external PVC keeps projects and login state across both suspension and execution replacement.
 
-To upgrade, update the image in [definition.yaml](definition.yaml) and set a new
-`spec.restartToken` in [instance.yaml](instance.yaml).
-Apply the definition and instance in that order.
-Existing instances keep their accepted revision until explicit replacement.
+To upgrade, update and apply [definition.yaml](definition.yaml).
+Wait for the Definition's current-generation `Ready` condition, then read
+`status.currentRevision`.
+Set `spec.revision` to that hash and change `spec.restartToken` in
+[instance.yaml](instance.yaml), then apply it.
+Changing only the restart token retains the accepted revision.
 Back up workspace data before application upgrades.
 
 Keep the PVC and its Group when retaining data after deleting an instance.

@@ -1,0 +1,10 @@
+# Only send application inputs and the project license to the builder.
+**
+!LICENSE
+!operator/
+!operator/http-api-agent/
+!operator/http-api-agent/image/
+!operator/http-api-agent/image/Containerfile
+!operator/http-api-agent/image/Containerfile.dockerignore
+!operator/http-api-agent/image/requirements.txt
+!operator/http-api-agent/image/app.py
