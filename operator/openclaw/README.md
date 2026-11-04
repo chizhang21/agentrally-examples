@@ -24,24 +24,47 @@ exceeded during live CLI activity.
 The writable HOME also retains `.config/openclaw` credentials.
 `/tmp` is ephemeral.
 
-## Install
+## Prerequisites
+
+Install [AgentRally Operator and agent-sandbox](https://github.com/chizhang21/agentrally-operator#quick-start).
 
 A default filesystem StorageClass must support the image UID/GID 1000.
-Configure `workspace.yaml` if another class is needed.
+Configure [workspace.yaml](workspace.yaml) if another class is needed.
+Prepare a private file containing the Gateway token.
 
-Install agent-sandbox Core and Extensions before the Operator.
-Then:
+Get the manifests:
+
+```sh
+git clone https://github.com/chizhang21/agentrally-examples.git
+cd agentrally-examples
+```
+
+## Deploy
+
+Create the AgentGroup, then its Secret and PVC, followed by the AgentDefinition and AgentInstance:
 
 ```sh
 kubectl apply -f operator/openclaw/group.yaml && kubectl wait agentgroup/openclaw --for=condition=Ready --timeout=120s
 # Supply a private token file; do not commit it.
 kubectl -n agentrally-openclaw create secret generic alice-gateway --from-file=token=/path/to/token
-kubectl apply -f operator/openclaw/workspace.yaml -f operator/openclaw/definition.yaml -f operator/openclaw/instance.yaml
+kubectl apply -f operator/openclaw/workspace.yaml -f operator/openclaw/definition.yaml -f operator/openclaw/instance.yaml && kubectl -n agentrally-openclaw wait agentinstance/alice --for=condition=Ready --timeout=300s
 ```
 
 On an empty workspace, the startup command writes a minimal local Gateway config with
 Control UI disabled, then replaces the shell with OpenClaw.
 Existing config is left intact.
+
+## Verify and configure
+
+Read the current Pod and run the authenticated Gateway health check:
+
+```sh
+pod=$(kubectl -n agentrally-openclaw get agentinstance alice -o jsonpath='{.status.podName}')
+kubectl -n agentrally-openclaw exec "$pod" -- node /app/dist/index.js health --json --timeout 10000
+```
+
+The response should include `"ok": true`.
+HTTP startup and liveness checks are already configured in the AgentDefinition.
 
 Complete provider/channel onboarding using the application's CLI in the reported
 `status.podName`.
@@ -81,7 +104,7 @@ Competing bindings report `WorkspaceInUse` before allocation.
 Delete the instance and wait for execution cleanup before deleting its definition.
 Retaining the PVC also requires retaining its namespace.
 Group deletion waits for remaining PVCs.
-See [deletion and data retention](https://github.com/chizhang21/agentrally-operator/blob/main/docs/agent-definitions.md#delete).
+See [lifecycle and data retention](https://github.com/chizhang21/agentrally-operator/blob/main/docs/usage.md#lifecycle).
 
 Existing-workspace allocations enforce zero spares even if Group policy changes; channel
 consumers and application cron jobs must not run in unassigned replicas.

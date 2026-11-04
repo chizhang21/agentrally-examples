@@ -1,25 +1,27 @@
 # AgentRally Examples
 
-Examples for AgentRally components.
-
-Each top-level directory contains examples and supporting files for an AgentRally component.
-Start with that component's README for prerequisites and instructions.
+Deployable application examples for AgentRally components.
+Each top-level directory contains examples for one component.
 
 | Component | Examples |
 | --- | --- |
-| [Operator](operator/README.md) | Codex Mobile, OpenClaw and HTTP agent deployments |
+| [Operator](operator/README.md) | HTTP API Agent and OpenClaw |
+
+Start with [HTTP API Agent](operator/http-api-agent/README.md), a minimal runnable Agent
+for verifying deployment, HTTP access and suspend/resume.
+Its default mode returns a fixed response without model credentials.
+
+Install [AgentRally Operator and its dependencies](https://github.com/chizhang21/agentrally-operator#quick-start)
+first, then follow the [deployment order](operator/README.md#deployment-order).
+Each application guide includes its configuration and verification steps.
 
 ```text
 operator/
   README.md
-  codex-mobile/
+  http-api-agent/
     image/
   openclaw/
-  http-api-agent/
 ```
-
-The Operator examples use [AgentRally Operator](https://github.com/chizhang21/agentrally-operator).
-Examples for other components can be added as peer directories when available.
 
 ## License
 

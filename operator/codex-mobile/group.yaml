@@ -1,8 +1,0 @@
-apiVersion: arally.io/v1alpha1
-kind: AgentGroup
-metadata:
-  name: codex-mobile
-spec:
-  namespace: agentrally-codex-mobile
-  prewarming:
-    replicas: 0
