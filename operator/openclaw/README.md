@@ -12,7 +12,7 @@ For another user with different credentials, create a separate definition refere
 that user's Secret and an instance with its own PVC.
 There is no per-instance environment override.
 
-This example pins the official `2026.10.4` image.
+This example pins the official `2026.10.4` image by digest.
 Paths and the LAN listener follow its
 [Compose configuration](https://github.com/openclaw/openclaw/blob/v2026.10.4/docker-compose.yml).
 
@@ -89,8 +89,8 @@ Use a unique token for each restart.
 When a GitOps controller owns the deployment, change these manifests in Git
 and let it reconcile them in the same readiness order.
 
-For reproducible artifacts, pin an image digest; revision pinning captures
-configuration, not mutable image tags or Secret contents.
+Update the image tag and digest together when upgrading OpenClaw.
+Revision pinning captures configuration, not Secret contents.
 
 Back up application state before upgrades that migrate its schema.
 

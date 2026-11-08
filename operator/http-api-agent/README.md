@@ -71,6 +71,15 @@ kubectl -n agentrally-http-api-agent describe agentinstance http-api-agent
 
 ## Suspend and resume
 
+Check the Pod UID before suspending and again after resuming:
+
+```sh
+kubectl -n agentrally-http-api-agent get agentinstance http-api-agent -o jsonpath='{.status.podUID}{"\n"}'
+```
+
+The recreated Pod may have the same name, but its UID changes.
+The current-generation `Suspended=True` condition confirms that the old Pod is gone.
+
 Suspend:
 
 ```sh
@@ -141,7 +150,9 @@ checks startup and authentication without model access, then publishes to GHCR.
 Push a version tag or dispatch the workflow with an image version.
 The Agent image and the Operator are released independently.
 Set the GHCR package visibility to **Public** for anonymous access.
-Use a versioned image or digest in deployments.
+The workflow summary provides a `tag@sha256:…` reference.
+Copy it into the AgentDefinition when updating the example.
+The digest fixes the image contents even if the tag changes.
 
 To refresh dependency locks:
 

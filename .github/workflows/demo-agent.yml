@@ -100,4 +100,6 @@ jobs:
           IMAGE: ${{ steps.identity.outputs.image }}
         run: |
           docker push "$IMAGE"
-          printf 'Image: %s\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          reference=$(docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}')
+          test "${reference%@*}" = "${IMAGE%:*}"
+          printf 'Image: `%s@%s`\n' "$IMAGE" "${reference#*@}" >> "$GITHUB_STEP_SUMMARY"
